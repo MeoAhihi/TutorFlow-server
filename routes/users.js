@@ -6,6 +6,7 @@ const User = require("../models").User;
 /* GET users listing. */
 router.get("/", async function (req, res, next) {
   const users = await User.findAll();
+  console.log(users);
   res.send(users);
 });
 
