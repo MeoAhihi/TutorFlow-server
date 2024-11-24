@@ -5,11 +5,11 @@ const passport = require("passport");
 const { ExtractJwt, Strategy } = require("passport-jwt");
 const jwt = require("jsonwebtoken");
 
-const User = require("../models").User;
+const { User, Tutor, Student /** Parent */ } = require("../models");
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: "secret",
+  secretOrKey: process.env.JWT_SECRET,
 };
 
 passport.use(
@@ -63,10 +63,16 @@ router.post("/login", async (req, res, next) => {
     if (!isMatched)
       return res.status(400).json({ message: "incorrect password" });
 
+    var role = undefined;
+    if (await Tutor.count({ where: { id: userExists.id } })) role = "tutor";
+    if (await Student.count({ where: { id: userExists.id } })) role = "student";
+    // if (await Parent.count({ where: { id: userExists.id } })) role = "parent";
+
     // generate access token
     const accessToken = jwt.sign(
       {
         id: userExists.id,
+        role,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }

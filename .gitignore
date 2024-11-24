@@ -1,3 +1,7 @@
+#environmental variable
+config
+.env
+
 # npm
 node_modules
 package-lock.json

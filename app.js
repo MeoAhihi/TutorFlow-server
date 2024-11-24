@@ -4,14 +4,18 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
-const dotenv = require("dotenv");
+const passport = require("passport");
+const { ExtractJwt, Strategy } = require("passport-jwt");
+
+// configure dotenv to access environment variables
+require("dotenv").config();
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
-
-// configure dotenv to access environment variables
-dotenv.config();
+const tutorRouter = require("./routes/tutors");
+const studentRouter = require("./routes/students");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -25,10 +29,26 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
+app.use(passport.initialize());
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
+app.use("/tutors", tutorRouter);
+app.use(
+  "/students",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const  bearerToken  = req.headers.authorization;
+    const token = bearerToken.split(" ")[1];
+
+    const decoded = jwt.decode(token);
+    // console.log(decoded);
+    req.decoded = decoded
+    next();
+  },
+  studentRouter
+);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
