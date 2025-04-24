@@ -5,17 +5,19 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
 const passport = require("passport");
-const { ExtractJwt, Strategy } = require("passport-jwt");
-
+// require("./models/ABAC");
 // configure dotenv to access environment variables
 require("dotenv").config();
+
+const { decodeJwtMiddleware } = require("./helpers/decodeToken");
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
 const tutorRouter = require("./routes/tutors");
 const studentRouter = require("./routes/students");
-const jwt = require("jsonwebtoken");
+const classRouter = require("./routes/class");
+const roleIs = require("./helpers/roleIs");
 
 const app = express();
 
@@ -34,20 +36,24 @@ app.use(passport.initialize());
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
-app.use("/tutors", tutorRouter);
+app.use(
+  "/tutors",
+  passport.authenticate("jwt", { session: false }),
+  decodeJwtMiddleware,
+  tutorRouter
+);
 app.use(
   "/students",
   passport.authenticate("jwt", { session: false }),
-  (req, res, next) => {
-    const  bearerToken  = req.headers.authorization;
-    const token = bearerToken.split(" ")[1];
-
-    const decoded = jwt.decode(token);
-    // console.log(decoded);
-    req.decoded = decoded
-    next();
-  },
+  decodeJwtMiddleware,
   studentRouter
+);
+app.use(
+  "/classes",
+  passport.authenticate("jwt", { session: false }),
+  decodeJwtMiddleware,
+  roleIs("tutor"),
+  classRouter
 );
 
 // catch 404 and forward to error handler

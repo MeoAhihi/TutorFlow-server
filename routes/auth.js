@@ -51,10 +51,14 @@ router.post("/register", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try {
     //check if user exists
-    const userExists = await User.findOne({ email: req.body.email });
+    const userExists = await User.findOne({ where: { email: req.body.email } });
     if (!userExists)
       return res.status(400).json({ message: "user does not exist" });
 
+    // console.log(
+    //   bcrypt.hashSync(req.body.password, "$2b$10$Nq9M2mDPIH07MKTH9Ez8v."),
+    //   userExists
+    // );
     // check if password is correct
     const isMatched = await bcrypt.compare(
       req.body.password,
@@ -63,9 +67,9 @@ router.post("/login", async (req, res, next) => {
     if (!isMatched)
       return res.status(400).json({ message: "incorrect password" });
 
-    var role = undefined;
-    if (await Tutor.count({ where: { id: userExists.id } })) role = "tutor";
-    if (await Student.count({ where: { id: userExists.id } })) role = "student";
+    // var role = undefined;
+    // if (await Tutor.count({ where: { id: userExists.id } })) role = "tutor";
+    // if (await Student.count({ where: { id: userExists.id } })) role = "student";
     // if (await Parent.count({ where: { id: userExists.id } })) role = "parent";
 
     // generate access token
